@@ -183,8 +183,10 @@
 
     .sidebar-title { font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
     .sidebar-search { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-inner); color: var(--text); font-size: 13px; outline: none; }
-    .sidebar-list { display: flex; flex-direction: column; gap: 6px; max-height: 60vh; overflow-y: auto; }
-    .sidebar-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-inner); font-size: 12px; cursor: pointer; }
+    
+    .sidebar-list { display: flex; flex-direction: column; gap: 6px; max-height: 60vh; overflow-y: auto; overflow-x: hidden; }
+    .sidebar-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-inner); font-size: 12px; cursor: pointer; transition: background 0.2s, transform 0.1s; overflow: hidden; white-space: nowrap; }
+    .sidebar-item:hover { background: rgba(37, 99, 235, 0.15); border-color: var(--primary); transform: translateX(2px); }
 
     /* HERO BANNER */
     .hero-banner {
@@ -207,6 +209,8 @@
     .batch-actions-global {
       display: flex;
       gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
     }
 
     .btn-global-cmd {
@@ -317,7 +321,25 @@
       border-color: var(--primary);
     }
 
-    /* THẺ PHÒNG */
+    /* THẺ PHÒNG & ANIMATION HIGHLIGHT */
+    @keyframes pulseGlow {
+      0% {
+        box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.9), var(--shadow);
+        border-color: var(--primary);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 0 25px 8px rgba(37, 99, 235, 0.6), var(--shadow);
+        border-color: var(--primary);
+        transform: scale(1.02);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(37, 99, 235, 0), var(--shadow);
+        border-color: var(--border);
+        transform: scale(1);
+      }
+    }
+
     .room-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -328,6 +350,12 @@
       gap: 12px;
       box-shadow: var(--shadow);
       position: relative;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+
+    .room-card.highlight-anim {
+      animation: pulseGlow 1.6s ease-in-out;
+      border-color: var(--primary);
     }
 
     .room-card.dragging {
@@ -338,6 +366,14 @@
 
     .card-top { display: flex; justify-content: space-between; align-items: center; }
     .tag-group { display: flex; gap: 6px; align-items: center; }
+    
+    .checkbox-custom {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: var(--primary);
+      margin-right: 4px;
+    }
 
     .badge-num { background: #1e293b; color: #818cf8; padding: 3px 7px; border-radius: 6px; font-size: 11px; font-weight: 800; }
     .badge-brand { background: #312e81; color: #a5b4fc; padding: 3px 7px; border-radius: 6px; font-size: 11px; font-weight: 700; }
@@ -526,8 +562,14 @@
       </div>
 
       <div class="batch-actions-global">
-        <button class="btn-global-cmd btn-global-on" onclick="toggleAllPower('on')">⚡ Bật tất cả</button>
-        <button class="btn-global-cmd btn-global-off" onclick="toggleAllPower('off')">🛑 Tắt tất cả</button>
+        <!-- Đã thêm nút Tạo dãy mới ở đây -->
+        <button class="header-btn" style="background: var(--primary); color: #fff; border: none;" onclick="addNewZone()">➕ Tạo dãy mới</button>
+        <button class="header-btn" onclick="toggleSelectAll()">☑️ Chọn tất cả</button>
+        <button class="btn-global-cmd btn-global-on" onclick="toggleSelectedPower('on')">⚡ Bật mục đã chọn</button>
+        <button class="btn-global-cmd btn-global-off" onclick="toggleSelectedPower('off')">🛑 Tắt mục đã chọn</button>
+        
+        <button class="btn-global-cmd" style="background: var(--card-inner); border: 1px solid var(--border); color: var(--text);" onclick="toggleAllPower('on')" title="Bật toàn bộ hệ thống">⚡ Bật tất cả</button>
+        <button class="btn-global-cmd" style="background: var(--card-inner); border: 1px solid var(--border); color: var(--text);" onclick="toggleAllPower('off')" title="Tắt toàn bộ hệ thống">🛑 Tắt tất cả</button>
       </div>
 
       <div class="hero-stats">
@@ -583,6 +625,18 @@
   </div>
 </div>
 
+<!-- MODAL XÁC NHẬN XÓA (PHÒNG / DÃY) -->
+<div class="modal-overlay" id="deleteConfirmModal">
+  <div class="modal-box">
+    <h3 style="margin:0; font-size: 16px; color: var(--red);">⚠️ Xác nhận xóa</h3>
+    <p id="deleteConfirmText" style="font-size: 13px; color: var(--text); margin: 5px 0;">Bạn có chắc chắn muốn xóa?</p>
+    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top: 10px;">
+      <button class="header-btn" onclick="closeModal('deleteConfirmModal')">Hủy bỏ</button>
+      <button class="header-btn" style="background:var(--red); color:#fff; border:none;" onclick="confirmDelete()">Xác nhận xóa</button>
+    </div>
+  </div>
+</div>
+
 <script>
   const LOCAL_ZONES_KEY = 'funiki_zones_v4';
   const LOCAL_ROOMS_KEY = 'funiki_rooms_v4';
@@ -592,16 +646,17 @@
   const MQTT_BROKER = 'wss://broker.hivemq.com:8884/mqtt';
   const CLIENT_ID = 'web_client_' + Math.random().toString(36).substring(2, 9);
   
-  // TOPIC CHUYÊN DỤNG ĐỂ ĐỒNG BỘ CẤU HÌNH TRỰC TUYẾN GIỮA CÁC THIẾT BỊ
   const SYNC_TOPIC = 'truong/funiki/config/sync';
 
   let mqttClient = null;
-  let isReceivingSync = false; // Cờ chặn lặp vô tận khi nhận dữ liệu đồng bộ
+  let isReceivingSync = false; 
+  let deleteTargetType = null; 
+  let deleteTargetId = null;
 
   /* NẠP DỮ LIỆU BAN ĐẦU */
   let zones = [];
   try { zones = JSON.parse(localStorage.getItem(LOCAL_ZONES_KEY)); } catch(e){}
-  if (!zones || !Array.isArray(zones) || zones.length === 0) {
+  if (!zones || !Array.isArray(zones)) {
     zones = [
       { id: 'zone_a', name: 'Dãy 9' },
       { id: 'zone_b', name: 'Dãy 10' }
@@ -649,20 +704,17 @@
     localStorage.setItem(LOCAL_LOGS_KEY, JSON.stringify(activityLogs));
   }
 
-  /* LƯU TRẠNG THÁI VÀ PHÁT TÍN HIỆU ĐỒNG BỘ LÊN TRỰC TUYẾN */
   function saveState(skipPublish = false) {
     localStorage.setItem(LOCAL_ZONES_KEY, JSON.stringify(zones));
     localStorage.setItem(LOCAL_ROOMS_KEY, JSON.stringify(rooms));
     localStorage.setItem(LOCAL_STATUS_KEY, JSON.stringify(roomStatuses));
     renderAll();
 
-    // Phát tín hiệu đồng bộ qua MQTT nếu thay đổi đến từ thiết bị này
     if (!skipPublish && mqttClient && mqttClient.connected && !isReceivingSync) {
       syncOnlineState();
     }
   }
 
-  /* GỬI DỮ LIỆU ĐỒNG BỘ LÊN MQTT */
   function syncOnlineState(manual = false) {
     if (!mqttClient || !mqttClient.connected) {
       if (manual) showToast('⚠️ Chưa kết nối mạng trực tuyến!');
@@ -692,11 +744,7 @@
 
     mqttClient.on('connect', () => {
       updateMQTTBadge('connected');
-
-      // 1. Đăng ký nhận đồng bộ cấu hình tổng
       mqttClient.subscribe(SYNC_TOPIC);
-
-      // 2. Đăng ký topic trạng thái từng phòng
       Object.values(rooms).forEach(r => {
         mqttClient.subscribe(r.statusTopic);
       });
@@ -705,7 +753,6 @@
     mqttClient.on('message', (topic, message) => {
       const payloadStr = message.toString();
 
-      // TRƯỜNG HỢP 1: Nhận tin nhắn ĐỒNG BỘ CẤU HÌNH từ thiết bị khác
       if (topic === SYNC_TOPIC) {
         try {
           const syncData = JSON.parse(payloadStr);
@@ -714,7 +761,6 @@
             zones = syncData.zones || zones;
             rooms = syncData.rooms || rooms;
 
-            // Đăng ký topic bổ sung cho các phòng mới nếu thiết bị khác vừa thêm
             Object.values(rooms).forEach(r => {
               if (mqttClient) mqttClient.subscribe(r.statusTopic);
             });
@@ -725,7 +771,7 @@
               });
             }
 
-            saveState(true); // Lưu lại và không phát lại tín hiệu
+            saveState(true);
             showToast('🔄 Đã đồng bộ dữ liệu từ thiết bị khác!');
             isReceivingSync = false;
           }
@@ -733,7 +779,6 @@
         return;
       }
 
-      // TRƯỜNG HỢP 2: Nhận tin nhắn trạng thái của phòng
       const room = Object.values(rooms).find(r => r.statusTopic === topic);
       if (room) {
         try {
@@ -788,6 +833,36 @@
     sendCommand(key, state.toUpperCase());
     addLog(`Bật/Tắt [${r.name}]: ${state.toUpperCase()}`);
     saveState();
+  }
+
+  function toggleSelectedPower(state) {
+    const checkboxes = document.querySelectorAll('.room-checkbox:checked');
+    if (checkboxes.length === 0) {
+      showToast('⚠️ Vui lòng chọn (tick) ít nhất 1 phòng!');
+      return;
+    }
+    
+    let count = 0;
+    checkboxes.forEach(cb => {
+      const key = cb.value;
+      if (rooms[key]) {
+        roomStatuses[key].power = state;
+        sendCommand(key, state.toUpperCase());
+        count++;
+      }
+      cb.checked = false;
+    });
+
+    const actionText = state === 'on' ? 'BẬT' : 'TẮT';
+    addLog(`Đã ${actionText} ${count} phòng được chọn`);
+    showToast(`⚡ Đã ${actionText} ${count} phòng được chọn!`);
+    saveState();
+  }
+
+  function toggleSelectAll() {
+    const checkboxes = document.querySelectorAll('.room-checkbox');
+    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+    checkboxes.forEach(cb => cb.checked = !allChecked);
   }
 
   function toggleAllPower(state) {
@@ -855,7 +930,16 @@
     saveState();
   }
 
-  /* TỰ ĐỘNG NHẬN DIỆN VÀ TĂNG TIẾN TÊN PHÒNG KÉP (VD: 9/1-6/1 ➔ 9/2-6/2 HOẶC 9/15-6/7 ➔ 9/16-6/8) */
+  function addNewZone() {
+    const zoneId = 'zone_' + Math.random().toString(36).substring(2, 7);
+    const zoneName = 'Dãy ' + (zones.length + 1);
+    zones.push({ id: zoneId, name: zoneName });
+    addLog(`Tạo dãy mới: ${zoneName}`);
+    saveState();
+    showToast(`✨ Đã tạo ${zoneName} thành công!`);
+    openRenameModal('zone', zoneId); // Tự mở bảng đổi tên để Sang tùy chỉnh ngay
+  }
+
   function generateNextRoomName(zoneId) {
     const zoneObj = zones.find(z => z.id === zoneId);
     const zoneRooms = Object.values(rooms).filter(r => r.zoneId === zoneId);
@@ -869,7 +953,6 @@
     const lastRoom = zoneRooms[zoneRooms.length - 1];
     const lastName = lastRoom.name;
 
-    // Pattern 1: Dạng kép (VD: 9/1-6/1 ➔ 9/2-6/2, 9/15-6/7 ➔ 9/16-6/8)
     const matchDual = lastName.match(/^(.*?)(\d+)\/(\d+)-(\d+)\/(\d+)$/);
     if (matchDual) {
       const prefix = matchDual[1];
@@ -880,7 +963,6 @@
       return `${prefix}${num1}/${sub1}-${num2}/${sub2}`;
     }
 
-    // Pattern 2: Dạng đơn (VD: 9/1 ➔ 9/2)
     const matchSingle = lastName.match(/^(.*?)(\d+)\/(\d+)$/);
     if (matchSingle) {
       const prefix = matchSingle[1];
@@ -889,7 +971,6 @@
       return `${prefix}${mainNum}/${subNum}`;
     }
 
-    // Pattern 3: Dạng số đơn (VD: Phòng 1 ➔ Phòng 2)
     const matchNum = lastName.match(/^(.*?)(\d+)$/);
     if (matchNum) {
       const prefix = matchNum[1];
@@ -926,14 +1007,52 @@
   }
 
   function deleteRoom(key) {
-    if (Object.keys(rooms).length <= 1) {
-      showToast('Cần duy trì ít nhất 1 phòng!');
-      return;
+    deleteTargetType = 'room';
+    deleteTargetId = key;
+    $('deleteConfirmText').innerHTML = `Bạn có chắc chắn muốn xóa phòng <b>[${rooms[key].name}]</b> không?`;
+    $('deleteConfirmModal').classList.add('open');
+  }
+
+  function deleteZone(zoneId) {
+    deleteTargetType = 'zone';
+    deleteTargetId = zoneId;
+    $('deleteConfirmText').textContent = 'Bạn có chắc chắn muốn xoá dãy?';
+    $('deleteConfirmModal').classList.add('open');
+  }
+
+  function confirmDelete() {
+    if (!deleteTargetId) return;
+
+    if (deleteTargetType === 'room') {
+      const key = deleteTargetId;
+      if (Object.keys(rooms).length <= 1) {
+        showToast('Cần duy trì ít nhất 1 phòng!');
+        closeModal('deleteConfirmModal');
+        return;
+      }
+      addLog(`Đã xóa: ${rooms[key].name}`);
+      delete rooms[key];
+      delete roomStatuses[key];
+    } else if (deleteTargetType === 'zone') {
+      const zoneId = deleteTargetId;
+      const zone = zones.find(z => z.id === zoneId);
+      
+      Object.keys(rooms).forEach(k => {
+        if (rooms[k].zoneId === zoneId) {
+          delete rooms[k];
+          delete roomStatuses[k];
+        }
+      });
+
+      zones = zones.filter(z => z.id !== zoneId);
+      addLog(`Đã xóa dãy: ${zone ? zone.name : zoneId}`);
+      showToast('🗑️ Đã xóa dãy thành công!');
     }
-    addLog(`Đã xóa: ${rooms[key].name}`);
-    delete rooms[key];
-    delete roomStatuses[key];
+
     saveState();
+    closeModal('deleteConfirmModal');
+    deleteTargetId = null;
+    deleteTargetType = null;
   }
 
   function moveRoomZone(roomKey, newZoneId) {
@@ -981,7 +1100,16 @@
     closeModal('customRenameModal');
   }
 
-  /* KÉO VÀ THẢ (DRAG AND DROP) */
+  function focusAndHighlightRoom(key) {
+    const card = $('card_' + key);
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.classList.remove('highlight-anim');
+      void card.offsetWidth;
+      card.classList.add('highlight-anim');
+    }
+  }
+
   function handleDragStart(e) {
     const card = e.currentTarget.closest('.room-card');
     if (!card) return;
@@ -1024,6 +1152,22 @@
     $('statActive').textContent = activeCount;
 
     const wrapper = $('zonesWrapper');
+
+    if (!zones || zones.length === 0) {
+      wrapper.innerHTML = `
+        <div style="text-align: center; padding: 50px 20px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow);">
+          <div style="font-size: 52px; margin-bottom: 12px;">🏫</div>
+          <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 800;">Chưa có dãy phòng nào</h3>
+          <p style="color: var(--sub); font-size: 13px; margin: 0 0 20px; max-width: 520px; margin-left: auto; margin-right: auto; line-height: 1.5;">
+            Hãy bắt đầu tạo dãy đầu tiên để có thể điều khiển phòng học từ xa thông qua web này nhé!
+          </p>
+          <button class="header-btn" style="background: var(--primary); color: #fff; margin: 0 auto; border: none; padding: 10px 20px; font-size: 13px; font-weight: 700; border-radius: 10px;" onclick="addNewZone()">➕ Tạo dãy mới</button>
+        </div>
+      `;
+      renderSidebar();
+      return;
+    }
+
     wrapper.innerHTML = zones.map(zone => {
       const zoneRooms = list.filter(r => r.zoneId === zone.id);
       
@@ -1037,6 +1181,7 @@
           <div class="room-card" id="card_${r.key}">
             <div class="card-top">
               <div class="tag-group">
+                <input type="checkbox" class="room-checkbox checkbox-custom" value="${r.key}" title="Chọn phòng này">
                 <span class="badge-num">#${r.roomNumber}</span>
                 <span class="badge-brand">Funiki</span>
                 <span class="badge-power ${isOn ? 'on' : 'off'}">${isOn ? 'Bật' : 'Tắt'}</span>
@@ -1091,7 +1236,8 @@
             <div class="zone-actions">
               <button class="btn-zone-cmd on" onclick="toggleZonePower('${zone.id}', 'on')">⚡ Bật dãy</button>
               <button class="btn-zone-cmd off" onclick="toggleZonePower('${zone.id}', 'off')">🛑 Tắt dãy</button>
-              <button class="btn-zone-action" onclick="openRenameModal('zone', '${zone.id}')">✏️ Đổi tên dãy</button>
+              <button class="btn-zone-action" onclick="openRenameModal('zone', '${zone.id}')">✏️ Đổi tên</button>
+              <button class="btn-zone-action" style="color:var(--red); border-color:rgba(239,68,68,0.3);" onclick="deleteZone('${zone.id}')">🗑️ Xóa dãy</button>
               <button class="btn-add-zone-room" onclick="addRoomToZone('${zone.id}')">➕ Thêm phòng</button>
             </div>
           </div>
@@ -1112,7 +1258,7 @@
     $('sidebarCount').textContent = filtered.length;
 
     $('sidebarList').innerHTML = filtered.map(r => `
-      <div class="sidebar-item" onclick="document.getElementById('card_${r.key}').scrollIntoView({behavior:'smooth'})">
+      <div class="sidebar-item" onclick="focusAndHighlightRoom('${r.key}')">
         <span><b>#${r.roomNumber}</b> ${r.name}</span>
         <span style="color:var(--sub);">${(roomStatuses[r.key]||{}).temp||'26'}°C</span>
       </div>
